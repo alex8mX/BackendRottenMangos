@@ -23,3 +23,29 @@ def movie_list(request):
 			serializer.save()
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
+
+@csrf_exempt
+def movie_detail(request, pk):
+	try:
+		movie = Movie.objects.get(pk=pk)
+
+	except Movie.DoesNotExist:
+		return HttpResponse(status=404)
+
+	if request.method == 'GET':
+		serializer = MovieSerializer(movie)
+		return JsonResponse(serializer.data)
+
+	elif request.method == 'PUT':
+		data = JSONParser().parse(request)
+		serializer = MovieSerializer(movie,data=data)
+
+		if serializer.is_valid():
+			serializer.save()
+			return JsonResponse(serializer.data, status=201)
+		return JsonResponse(serializer.errors, status=400)
+
+	elif request.method == 'DELETE':
+		movie.delete()
+		return HttpResponse(status=204)
+		
