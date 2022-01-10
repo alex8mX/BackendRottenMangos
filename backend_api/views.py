@@ -1,14 +1,20 @@
-from django.http import Http404
 from .models import Movie
-from .serializers import MovieSerializer
+from .serializers import *
+from .permissions import IsOwnerOrReadOnly
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+from rest_framework import generics
+from django.contrib.auth.models import User
 
 
 # Create your views here.
 class MovieList(APIView):
+
+	authentication_classes = [TokenAuthentication]
+	permission_classes = [IsAuthenticated]
 
 	def get(self,request, format=None):
 		movies = Movie.objects.all()
@@ -19,11 +25,17 @@ class MovieList(APIView):
 		serializer = MovieSerializer(data=request.data)
 
 		if serializer.is_valid():
-			serializer.save()
+			serializer.save(owner=self.request.user)
 			return Response(serializer.data, status=status.HTTP_201_CREATED)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+	def perform_create(self,serializer):
+		serializer.save(owner=self.request.user)
+
 class MovieDetail(APIView):
+
+	authentication_classes = [TokenAuthentication]
+	permission_classes = [IsAuthenticated,IsOwnerOrReadOnly]
 
 	def get_object(self,pk):
 		try:
@@ -50,4 +62,15 @@ class MovieDetail(APIView):
 		movie = self.get_object(pk)
 		movie.delete()
 		return Response(status=status.HTTP_204_NO_CONTENT)
+
+	def perform_create(self, serializer):
+		serializer.save(owner=self.request.user)
 		
+
+class UserList(generics.ListAPIView):
+	queryset = User.objects.all()
+	serializer_class = UserSerializer
+
+class UserDetail(generics.RetrieveAPIView):
+	queryset = User.objects.all()
+	serializer_class = UserSerializer

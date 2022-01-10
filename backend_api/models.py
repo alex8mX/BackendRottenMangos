@@ -11,6 +11,7 @@ class Movie(models.Model):
 	release_date = models.DateField()
 	genre = models.CharField(max_length=250, choices=GENRES_CHOICES)
 	plot = models.CharField(max_length=250)
+	owner = models.ForeignKey('auth.User', related_name = 'movies', on_delete=models.CASCADE)
 
 	def __str__(self):
 		return self.title
