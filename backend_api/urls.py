@@ -11,6 +11,9 @@ urlpatterns = [
     path('reviews/', views.ReviewList.as_view()), # Reviews List, Create Route
     path('reviews/<int:pk>/', views.ReviewDetail.as_view()), # Reviews Detail, Update, Delete Route
 
+    path('watchlist/', views.WatchlistList.as_view()),
+    path('watchlist/<int:pk>/',views.WatchlistDetail.as_view()),
+
     path('users/', views.UserList.as_view()), # User List
 	path('users/<int:pk>/', views.UserDetail.as_view()), # User Detail
 

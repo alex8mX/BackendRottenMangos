@@ -31,3 +31,10 @@ class UserSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = User
 		fields = ['id', 'username', 'email', 'password','reviews']
+
+class WatchlistSerializer(serializers.ModelSerializer):
+	owner = serializers.ReadOnlyField(source='owner.username')
+
+	class Meta:
+		model = Watchlist
+		fields = '__all__'

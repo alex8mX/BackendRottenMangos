@@ -132,3 +132,44 @@ class UserCreate(APIView):
 				json['token'] = token.key
 				return Response(json, status=status.HTTP_201_CREATED)
 		return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+
+class WatchlistList(APIView):
+
+	authentication_classes = [TokenAuthentication]
+	permission_classes = [IsAuthenticated]
+
+	def get(self,request, format=None):
+		whatchlists = Watchlist.objects.all()
+		serializer = WatchlistSerializer(whatchlists, many= True)
+		return Response(serializer.data)
+
+	def post(self,request,format=None):
+		serializer = WatchlistSerializer(data=request.data)
+
+		if serializer.is_valid():
+			serializer.save(owner=self.request.user)
+			return Response(serializer.data, status=status.HTTP_201_CREATED)
+		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class WatchlistDetail(APIView):
+
+	authentication_classes = [TokenAuthentication]
+	permission_classes = [IsAuthenticated]
+
+	def get_object(self,pk):
+		try:
+			return Watchlist.objects.get(pk=pk)
+
+		except Watchlist.DoesNotExist:
+			return Response(status=status.HTTP_404_NOT_FOUND)
+
+	def get(self, request, pk, format=None):
+		watchlist = self.get_object(pk)
+		serializer = WatchlistSerializer(watchlist)
+		return Response(serializer.data)
+
+	def delete(self, request, pk, format=None):
+		watchlist = self.get_object(pk)
+		watchlist.delete()
+		return Response(status=status.HTTP_204_NO_CONTENT)

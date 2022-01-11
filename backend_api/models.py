@@ -23,7 +23,7 @@ class Movie(models.Model):
 		return self.title
 
 class Review(models.Model):
-	movie = models.ForeignKey(Movie, related_name ='reviews', on_delete=models.CASCADE)
+	movie = models.ForeignKey(Movie, related_name = 'reviews', on_delete=models.CASCADE)
 	star_rating = models.IntegerField(null=False, validators = [MaxValueValidator(5),MinValueValidator(0)])
 	comment = models.CharField(max_length=250)
 	owner = models.ForeignKey('auth.User', related_name = 'reviews', on_delete=models.CASCADE)
@@ -34,3 +34,10 @@ class Review(models.Model):
 
 	def __str__(self):
 		return u'%s stars ' % (self.star_rating)
+
+class Watchlist(models.Model):
+	movie = models.ForeignKey(Movie, related_name = 'watchlists', on_delete=models.CASCADE)
+	owner = models.ForeignKey('auth.User', related_name = 'watchlists', on_delete=models.CASCADE)
+
+	class Meta:
+		unique_together = ["movie","owner"]
