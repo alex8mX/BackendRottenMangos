@@ -19,16 +19,22 @@ class MovieList(APIView):
 
 	def get(self,request, format=None):
 		movies = Movie.objects.all()
-		serializer = MovieSerializer(movies, many= True)
-		return Response(serializer.data)
+		if movies:
+			serializer = MovieSerializer(movies, many= True)
+			return Response(serializer.data)
+		else:
+			return Response({"message":"No movies registered!"}, status = status.HTTP_404_NOT_FOUND)
 
 	def post(self,request,format=None):
 		serializer = MovieSerializer(data=request.data)
 
 		if serializer.is_valid():
-			serializer.save()
-			return Response(serializer.data, status=status.HTTP_201_CREATED)
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+			movie = serializer.save()
+			if movie:
+				return Response({"message":"Movie created successfully!", "data":serializer.data}, status=status.HTTP_201_CREATED)
+			else:
+				return Response({"message": "An error has ocurred! Check with the administrator"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+		return Response({"message":"An error has ocurred with the request, please check again!", "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class MovieDetail(APIView):
 
@@ -40,7 +46,7 @@ class MovieDetail(APIView):
 			return Movie.objects.get(pk=pk)
 
 		except Movie.DoesNotExist:
-			return Response(status=status.HTTP_404_NOT_FOUND)
+			return Response({"message":"There is no Movie with that id!"},status=status.HTTP_404_NOT_FOUND)
 
 	def get(self, request, pk, format=None):
 		movie = self.get_object(pk)
@@ -52,9 +58,12 @@ class MovieDetail(APIView):
 		serializer = MovieSerializer(movie,data=request.data)
 
 		if serializer.is_valid():
-			serializer.save()
-			return Response(serializer.data)
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+			movie = serializer.save()
+			if movie:
+				return Response({"message":"Movie updated successfully!", "data":serializer.data}, status=status.HTTP_200_OK)
+			else:
+				return Response({"message": "An error has ocurred! Check with the administrator"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+		return Response({"message":"An error has ocurred with the request, please check again!", "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 	def delete(self, request, pk, format=None):
 		movie = self.get_object(pk)
@@ -69,16 +78,22 @@ class ReviewList(APIView):
 
 	def get(self,request, format=None):
 		reviews = Review.objects.all()
-		serializer = ReviewSerializer(reviews, many= True)
-		return Response(serializer.data)
+		if reviews:
+			serializer = ReviewSerializer(reviews, many= True)
+			return Response(serializer.data)
+		else:
+			return Response({"message":"No reviews registered!"}, status = status.HTTP_404_NOT_FOUND)
 
 	def post(self,request,format=None):
 		serializer = ReviewSerializer(data=request.data)
 
 		if serializer.is_valid():
-			serializer.save(owner=self.request.user)
-			return Response(serializer.data, status=status.HTTP_201_CREATED)
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+			review = serializer.save(owner=self.request.user)
+			if review:
+				return Response({"message":"Review created successfully!", "data":serializer.data}, status=status.HTTP_201_CREATED)
+			else:
+				return Response({"message": "An error has ocurred! Check with the administrator"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+		return Response({"message":"An error has ocurred with the request, please check again!", "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class ReviewDetail(APIView):
 
@@ -90,7 +105,7 @@ class ReviewDetail(APIView):
 			return Review.objects.get(pk=pk)
 
 		except Review.DoesNotExist:
-			return Response(status=status.HTTP_404_NOT_FOUND)
+			return Response({"message":"There is no Review with that id!"},status=status.HTTP_404_NOT_FOUND)
 
 	def get(self, request, pk, format=None):
 		review = self.get_object(pk)
@@ -99,15 +114,25 @@ class ReviewDetail(APIView):
 
 	def put(self, request, pk, format=None):
 		review = self.get_object(pk)
+
+		if self.request.user != review.owner:
+			return Response({"Error":"This is not your review, you can't change it!"},status=status.HTTP_403_FORBIDDEN)
+
 		serializer = ReviewSerializer(review,data=request.data)
 
 		if serializer.is_valid():
-			serializer.save()
-			return Response(serializer.data)
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+			review = serializer.save()
+			if review:
+				return Response({"message":"Review updated successfully!", "data":serializer.data}, status=status.HTTP_200_OK)
+			else:
+				return Response({"message": "An error has ocurred! Check with the administrator"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+		return Response({"message":"An error has ocurred with the request, please check again!", "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)	
 
 	def delete(self, request, pk, format=None):
 		review = self.get_object(pk)
+
+		if self.request.user != review.owner:
+			return Response({"Error":"This is not your review! you can't delete it!"},status=status.HTTP_403_FORBIDDEN)
 		review.delete()
 		return Response(status=status.HTTP_204_NO_CONTENT)
 		
@@ -131,7 +156,9 @@ class UserCreate(APIView):
 				json = serializer.data
 				json['token'] = token.key
 				return Response(json, status=status.HTTP_201_CREATED)
-		return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+			else:
+				return Response({"message": "An error has ocurred! Check with the administrator"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+		return Response({"message":"An error has ocurred with the request, please check again!", "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)	
 
 
 class WatchlistList(APIView):
@@ -140,17 +167,24 @@ class WatchlistList(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self,request, format=None):
-		whatchlists = Watchlist.objects.all()
-		serializer = WatchlistSerializer(whatchlists, many= True)
-		return Response(serializer.data)
+		watchlists = Watchlist.objects.all()
+
+		if watchlists:
+			serializer = WatchlistSerializer(watchlists, many= True)
+			return Response(serializer.data)
+		else:
+			return Response({"message":"No watchlists registered!"}, status = status.HTTP_404_NOT_FOUND)
 
 	def post(self,request,format=None):
 		serializer = WatchlistSerializer(data=request.data)
 
 		if serializer.is_valid():
-			serializer.save(owner=self.request.user)
-			return Response(serializer.data, status=status.HTTP_201_CREATED)
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+			watchlist = serializer.save(owner=self.request.user)
+			if watchlist:
+				return Response(serializer.data, status=status.HTTP_201_CREATED)
+			else:
+				return Response({"message": "An error has ocurred! Check with the administrator"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+		return Response({"message":"An error has ocurred with the request, please check again!", "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)	
 
 class WatchlistDetail(APIView):
 
@@ -162,14 +196,22 @@ class WatchlistDetail(APIView):
 			return Watchlist.objects.get(pk=pk)
 
 		except Watchlist.DoesNotExist:
-			return Response(status=status.HTTP_404_NOT_FOUND)
+			return Response({"message":"There is no Watchlist with that id!"},status=status.HTTP_404_NOT_FOUND)
 
 	def get(self, request, pk, format=None):
 		watchlist = self.get_object(pk)
+
+		if self.request.user != watchlist.owner:
+			return Response({"Error":"This is not your watchlist!"},status=status.HTTP_403_FORBIDDEN)
+
 		serializer = WatchlistSerializer(watchlist)
 		return Response(serializer.data)
 
 	def delete(self, request, pk, format=None):
 		watchlist = self.get_object(pk)
+
+		if self.request.user != watchlist.owner:
+			return Response({"Error":"This is not your watchlist! you can't delete it!"},status=status.HTTP_403_FORBIDDEN)
+
 		watchlist.delete()
 		return Response(status=status.HTTP_204_NO_CONTENT)
