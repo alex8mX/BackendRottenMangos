@@ -14,7 +14,7 @@ urlpatterns = [
     path('users/', views.UserList.as_view()), # User List
 	path('users/<int:pk>/', views.UserDetail.as_view()), # User Detail
 
-	path('users/create', views.UserCreate.as_view(), name='user-create'),
+	path('users/create', views.UserCreate.as_view(), name='user-create'), # Create User Route
 
 	path('api-token-auth/', AuthViews.obtain_auth_token), # Request Valid Token
 
