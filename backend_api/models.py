@@ -33,7 +33,7 @@ class Review(models.Model):
 		self.movie.update_review_fields()
 
 	def __str__(self):
-		return u'%s stars ' % (self.star_rating)
+		return u'User: %s. Rating: %s Stars. Review: %s.' % (self.owner.username, self.star_rating, self.comment)
 
 class Watchlist(models.Model):
 	movie = models.ForeignKey(Movie, related_name = 'watchlists', on_delete=models.CASCADE)
