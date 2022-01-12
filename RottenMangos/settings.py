@@ -55,6 +55,7 @@ REST_FRAMEWORK = {
 }
 
 SWAGGER_SETTINGS = {
+      'USE_SESSION_AUTH': False,
       'SECURITY_DEFINITIONS': {
          'DRF Token': {
                'type': 'apiKey',
