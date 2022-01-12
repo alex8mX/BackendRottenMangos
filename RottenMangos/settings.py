@@ -40,8 +40,10 @@ INSTALLED_APPS = [
 
     #My Apps
     'backend_api',
+    #3rd Apps
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_yasg',
 ]
 
 REST_FRAMEWORK = {
