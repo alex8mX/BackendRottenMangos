@@ -1,4 +1,6 @@
 # Byte-compiled / optimized / DLL files
 backend_api/__pycache__/
 backend_api/migrations/__pycache__/
+backend_api
+RottenMangos/__pycache__/
 *.py[cod]
